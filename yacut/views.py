@@ -2,10 +2,8 @@ from flask import render_template, redirect, flash, abort
 from http import HTTPStatus
 
 from . import app
-from .error_handlers import CreateLinkException
 from .forms import YacutForm, FileUploadForm
 from .models import URLMap
-from .utils import create_short_link
 from .yadisk import upload_files_to_yadisk
 
 UPLOAD_ERROR = 'Ошибка при загрузке файлов - {}'
@@ -14,18 +12,20 @@ UPLOAD_ERROR = 'Ошибка при загрузке файлов - {}'
 @app.route('/', methods=['GET', 'POST'])
 def index_view():
     form = YacutForm()
-    if form.validate_on_submit():
-        try:
-            create_short_link({
-                'url': form.original_link.data,
-                'custom_id': form.custom_id.data
-            })
-            return render_template(
-                'index.html', form=form, short=form.custom_id.data
-            )
-        except CreateLinkException as error:
-            flash(str(error))
-    return render_template('index.html', form=form)
+    if not form.validate_on_submit():
+        return render_template('index.html', form=form)
+    try:
+        return render_template(
+            'index.html',
+            form=form,
+            short_url=URLMap.create(
+                form.original_link.data,
+                form.custom_id.data
+            ).get_short_url()
+        )
+    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
+        flash(exc)
+        return render_template('index.html', form=form)
 
 
 @app.route('/files', methods=['GET', 'POST'])

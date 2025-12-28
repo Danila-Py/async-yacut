@@ -5,10 +5,17 @@ import random
 from flask import url_for
 
 from . import db
-from .constants import (ALLOWED_AUTO_CHARS, SHORT_MAX_LEN,
-                        ORIGINAL_LINK_LENGJT,
-                        SHORT_URL_VIEW, URL_MAX_LEN, SHORT_MAX_LEN,
-                        RESERVED_SHORTS, REGEX, ADD_TRIES, AUTO_LINK_LENGJT)
+from .constants import (
+    ALLOWED_AUTO_CHARS,
+    ORIGINAL_LINK_LENGJT,
+    SHORT_URL_VIEW,
+    URL_MAX_LEN,
+    SHORT_MAX_LEN,
+    RESERVED_SHORTS,
+    REGEX,
+    ADD_TRIES,
+    AUTO_LINK_LENGJT
+)
 
 
 LONG_URL = 'Слишком длинная ссылка!'
@@ -21,7 +28,7 @@ class URLMap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     original = db.Column(db.String(ORIGINAL_LINK_LENGJT), nullable=False)
     short = db.Column(db.String(SHORT_MAX_LEN), unique=True)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
 
     class ObjectCreateError(Exception):
         """Класс исключений, возникающих при создании записи."""
@@ -64,14 +71,8 @@ class URLMap(db.Model):
     def to_dict(self):
         return dict(
             url=self.original,
-            short_link=url_for(
-                'redirect_view', custom_id=self.short, _external=True
-            )
+            short_link=self.get_short_url(),
         )
 
     def get_short_url(self):
         return url_for(SHORT_URL_VIEW, custom_id=self.short, _external=True)
-
-    def from_dict(self, data):
-        self.original = data['url']
-        self.short = data['custom_id']

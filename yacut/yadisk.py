@@ -1,69 +1,34 @@
-import urllib
 import os
-from http import HTTPStatus
-
-from dotenv import load_dotenv
+import asyncio
 import aiohttp
-from . import app
+from dotenv import load_dotenv
+import urllib
 
 
 load_dotenv()
 DISK_TOKEN = os.environ.get('DISK_TOKEN')
 AUTH_HEADERS = {'Authorization': f'OAuth {DISK_TOKEN}'}
 API_VERSION = 'v1'
+API_HOST = 'https://cloud-api.yandex.net/'
 UPLOAD_PATH = 'app:/{}'
 REQUEST_UPLOAD_URL = (
-    f'{app.config["API_HOST"]}'
+    f'{API_HOST}'
     f'{API_VERSION}/disk/resources/upload'
 )
 REQUEST_DOWNLOAD_URL = (
-    f'{app.config["API_HOST"]}'
+    f'{API_HOST}'
     f'{API_VERSION}/disk/resources/download'
 )
-GET_LINK_FAILED = 'Не удалось получить ссылку: {}'
 
 
-async def upload_files_to_yadisk(file_data, filename):
+async def upload_files_to_yadisk(files):
     async with aiohttp.ClientSession() as session:
-        params = {
-            'path': f'app:/{filename}',
-            'overwrite': 'true'
-        }
-        async with session.get(
-            REQUEST_UPLOAD_URL,
-            headers=AUTH_HEADERS,
-            params=params,
-        ) as response:
-            upload_url = (await response.json()).get('href')
-
-        async with session.put(upload_url, data=file_data) as upload_response:
-            if upload_response.status not in [
-                HTTPStatus.CREATED,
-                HTTPStatus.ACCEPTED,
-            ]:
-                raise IOError(
-                    REQUEST_UPLOAD_URL.format(upload_response.status)
-                )
-        return f'app:/{filename}'
+        return await asyncio.gather(
+            *[upload_single_file(session, file) for file in files]
+        )
 
 
-async def get_download_link(file_path):
-    async with aiohttp.ClientSession() as session:
-        params = {'path': file_path}
-        async with session.get(
-            REQUEST_DOWNLOAD_URL,
-            headers=AUTH_HEADERS,
-            params=params,
-        ) as response:
-            if response.status != HTTPStatus.OK:
-                raise IOError(
-                    GET_LINK_FAILED.format(response.status)
-                )
-            return (await response.json()).get('href')
-
-
-async def upload_file_and_get_url(session, file):
-    """Функция загрузки файлов и получения URL для скачивания."""
+async def upload_single_file(session, file):
     async with session.get(
             REQUEST_UPLOAD_URL,
             headers=AUTH_HEADERS,
