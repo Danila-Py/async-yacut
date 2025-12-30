@@ -5,6 +5,7 @@ import random
 from flask import url_for
 
 from . import db
+
 from .constants import (
     ALLOWED_AUTO_CHARS,
     ORIGINAL_LINK_LENGJT,
@@ -47,7 +48,6 @@ class URLMap(db.Model):
                 return short
         raise URLMap.ShortGenerateError(SHORT_GENERATE_ERROR.format(ADD_TRIES))
 
-    @staticmethod
     def create(original, short=None, not_validated=False):
         if not_validated and len(original) > URL_MAX_LEN:
             raise URLMap.ObjectCreateError(LONG_URL)
@@ -64,7 +64,6 @@ class URLMap(db.Model):
         db.session.commit()
         return url_map
 
-    @staticmethod
     def get(short):
         return URLMap.query.filter_by(short=short).first()
 

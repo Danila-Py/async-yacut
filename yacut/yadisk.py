@@ -1,8 +1,9 @@
 import os
 import asyncio
 import aiohttp
-from dotenv import load_dotenv
 import urllib
+
+from dotenv import load_dotenv
 
 
 load_dotenv()

@@ -1,7 +1,6 @@
 from string import ascii_letters, digits
 
 ALLOWED_AUTO_CHARS = digits + ascii_letters
-ALLOWED_USER_CHARS = '^[a-zA-Z0-9_]*$'
 ORIGINAL_LINK_LENGJT = 256
 AUTO_LINK_LENGJT = 6
 REGEX = fr'^[{ALLOWED_AUTO_CHARS}]*$'
