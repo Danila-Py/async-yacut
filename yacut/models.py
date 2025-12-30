@@ -1,10 +1,11 @@
 from datetime import datetime
 from re import search
 import random
-
 from flask import url_for
 
 from . import db
+
+from .exceptions import ObjectCreateError, ShortGenerateError
 
 from .constants import (
     ALLOWED_AUTO_CHARS,
@@ -31,12 +32,6 @@ class URLMap(db.Model):
     short = db.Column(db.String(SHORT_MAX_LEN), unique=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
 
-    class ObjectCreateError(Exception):
-        """Класс исключений, возникающих при создании записи."""
-
-    class ShortGenerateError(Exception):
-        """Класс исключений, возникающих при генерации короткого id."""
-
     @staticmethod
     def generate_short():
         for _ in range(ADD_TRIES):
@@ -46,19 +41,19 @@ class URLMap(db.Model):
             ))
             if URLMap.get(short) is None:
                 return short
-        raise URLMap.ShortGenerateError(SHORT_GENERATE_ERROR.format(ADD_TRIES))
+        raise ShortGenerateError(SHORT_GENERATE_ERROR.format(ADD_TRIES))
 
     def create(original, short=None, not_validated=False):
         if not_validated and len(original) > URL_MAX_LEN:
-            raise URLMap.ObjectCreateError(LONG_URL)
+            raise ObjectCreateError(LONG_URL)
         if not short:
             short = URLMap.generate_short()
         else:
             if (not_validated and len(short) > SHORT_MAX_LEN
                     or not search(REGEX, short)):
-                raise URLMap.ObjectCreateError(INVALID_SHORT)
+                raise ObjectCreateError(INVALID_SHORT)
             if URLMap.get(short) or short in RESERVED_SHORTS:
-                raise URLMap.ObjectCreateError(SHORT_EXISTS)
+                raise ObjectCreateError(SHORT_EXISTS)
         url_map = URLMap(original=original, short=short)
         db.session.add(url_map)
         db.session.commit()

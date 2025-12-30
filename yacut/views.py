@@ -1,10 +1,12 @@
-from flask import render_template, redirect, flash, abort
 from http import HTTPStatus
+
+from flask import render_template, redirect, flash, abort
 
 from . import app
 from .forms import YacutForm, FileUploadForm
 from .models import URLMap
 from .yadisk import upload_files_to_yadisk
+from .exceptions import ObjectCreateError, ShortGenerateError
 
 UPLOAD_ERROR = 'Ошибка при загрузке файлов - {}'
 
@@ -23,7 +25,7 @@ def index_view():
                 form.custom_id.data
             ).get_short_url()
         )
-    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
+    except (ObjectCreateError, ShortGenerateError) as exc:
         flash(exc)
         return render_template('index.html', form=form)
 
@@ -46,7 +48,7 @@ async def file():
                 )
             ]
         )
-    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
+    except (ObjectCreateError, ShortGenerateError) as exc:
         flash(exc)
         return render_template('upload_files.html', form=form)
     except Exception as exc:

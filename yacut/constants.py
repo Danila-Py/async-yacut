@@ -9,3 +9,4 @@ SHORT_MAX_LEN = 16
 ADD_TRIES = 10
 RESERVED_SHORTS = 'files'
 SHORT_URL_VIEW = 'redirect_view'
+LOCALHOST = 'http://localhost/'

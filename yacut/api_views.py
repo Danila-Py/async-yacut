@@ -5,6 +5,7 @@ from http import HTTPStatus
 from . import app
 from .error_handlers import InvalidAPIUsage
 from .models import URLMap
+from .exceptions import ObjectCreateError, ShortGenerateError
 
 SHORT_NOT_FOUND = 'Указанный id не найден'
 NO_BODY = 'Отсутствует тело запроса'
@@ -22,7 +23,7 @@ def create_link():
         return jsonify(
             URLMap.create(data['url'], data.get('custom_id'), True).to_dict()
         ), HTTPStatus.CREATED
-    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
+    except (ObjectCreateError, ShortGenerateError) as exc:
         raise InvalidAPIUsage(str(exc))
 
 
